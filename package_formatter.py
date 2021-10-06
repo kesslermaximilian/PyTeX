@@ -95,4 +95,5 @@ class PackageFormatter:
             newlines += self.format_with_arg(self.format(line))
         if output_dir is None:
             output_dir = input_path.parent
+        output_dir.mkdir(parents=True, exist_ok=True)
         (output_dir / self.file_name).write_text(''.join(newlines))
