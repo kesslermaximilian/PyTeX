@@ -3,14 +3,13 @@ import re
 from pathlib import Path
 from typing import Dict
 from datetime import *
-from config import DEFAULT_DESCRIPTION, DEFAULT_AUTHOR
+from config import DEFAULT_AUTHOR
 from enums import Attributes, Args
 
 
 class PackageFormatter:
-    def __init__(self, package_name: str, description: str = DEFAULT_DESCRIPTION, author: str = DEFAULT_AUTHOR):
+    def __init__(self, package_name: str, author: str = DEFAULT_AUTHOR):
         self.package_name_raw = package_name
-        self.description = description
         self.author = author
         author_parts = self.author.lower().replace('ß', 'ss').split(' ')
         self.author_acronym = author_parts[0][0] + author_parts[-1]
@@ -19,6 +18,7 @@ class PackageFormatter:
         self.package_prefix = self.package_name.replace('-', '@') + '@'
         self.file_name = self.package_name + '.sty'
         self.date = datetime.now().strftime('%Y/%m/%d')
+        self.year = int(datetime.now().strftime('%Y'))
         self.replace_dict: Dict = {}
         self.arg_replace_dict: Dict = {}
 
