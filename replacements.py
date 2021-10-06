@@ -22,9 +22,9 @@ def make_default_commands(package_formatter: PackageFormatter):
     package_formatter.add_replacement('file name', '{name}', name=Attributes.file_name)
     package_formatter.add_replacement('date', '{}', Attributes.date)
     package_formatter.add_replacement('author', '{}', Attributes.author)
-    package_formatter.add_arg_replacement(1, 'newif', r'\newif\if{prefix}{condition}',
-                                          prefix=Attributes.package_prefix, condition=Args.one)
-    package_formatter.add_arg_replacement(2, 'setif', r'\{prefix}{condition}{value}',
+    package_formatter.add_arg_replacement(2, 'new if', r'\newif\if{prefix}{condition}\{prefix}{condition}{value}',
+                                          prefix=Attributes.package_prefix, condition=Args.one, value=Args.two)
+    package_formatter.add_arg_replacement(2, 'set if', r'\{prefix}{condition}{value}',
                                           prefix=Attributes.package_prefix, condition=Args.one, value=Args.two)
     package_formatter.add_arg_replacement(1, 'if', r'\if{prefix}{condition}', prefix=Attributes.package_prefix,
                                           condition=Args.one)

@@ -32,9 +32,9 @@ class PackageFormatter:
             if type(arg) == Attributes:
                 new_args.append(getattr(self, arg.value))
             elif type(arg) == Args:
-                new_args.append(match_groups[arg.value])
+                new_args.append(match_groups[arg.value].strip())
             elif type(arg) == str:
-                new_args.append(arg)
+                new_args.append(arg.strip())
             else:
                 new_args += 'ERROR'
         new_args = tuple(new_args)
@@ -43,7 +43,7 @@ class PackageFormatter:
             if type(user_kwargs[kw]) == Attributes:
                 new_kwargs[kw] = getattr(self, user_kwargs[kw].value)
             elif type(user_kwargs[kw]) == Args:
-                new_kwargs[kw] = match_groups[user_kwargs[kw].value]
+                new_kwargs[kw] = match_groups[user_kwargs[kw].value].strip()
             elif type(user_kwargs[kw]) == str:
                 new_kwargs[kw] = user_kwargs[kw]
             else:
