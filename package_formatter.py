@@ -26,13 +26,13 @@ class PackageFormatter:
     def command_name2keyword(keyword: str):
         return '__' + keyword.upper().strip().replace(' ', '_') + '__'
 
-    def parse_replacement_args(self, *user_args, **user_kwargs):
+    def parse_replacement_args(self, match_groups, *user_args, **user_kwargs):
         new_args = []
         for arg in user_args:
             if type(arg) == Attributes:
                 new_args.append(getattr(self, arg.value))
             elif type(arg) == Args:
-                new_args.append('{}')  # Do *not* format this entry in the string
+                new_args.append(match_groups[arg.value])
             elif type(arg) == str:
                 new_args.append(arg)
             else:
@@ -43,61 +43,24 @@ class PackageFormatter:
             if type(user_kwargs[kw]) == Attributes:
                 new_kwargs[kw] = getattr(self, user_kwargs[kw].value)
             elif type(user_kwargs[kw]) == Args:
-                new_kwargs[kw] = '{{{}}}'.format(kw)  # Do *not* format this entry in the string
+                new_kwargs[kw] = match_groups[user_kwargs[kw].value]
             elif type(user_kwargs[kw]) == str:
                 new_kwargs[kw] = user_kwargs[kw]
             else:
                 new_kwargs[kw] = 'ERROR'
         return new_args, new_kwargs
 
-    @staticmethod
-    def filter_replacement_args(*user_args, **user_kwargs):
-        new_args = []
-        for arg in user_args:
-            if type(arg) == Args:
-                new_args.append(arg)
-        new_args = tuple(new_args)
-        new_kwargs = {}
-        for kw in user_kwargs:
-            if type(user_kwargs[kw]) == Args:
-                new_kwargs[kw] = user_kwargs[kw]
-        return new_args, new_kwargs
-
-    def add_replacement(self, keyword: str, replacement: str, *args, **kwargs) -> bool:
-        if keyword in self.replace_dict.keys():
-            return False
-        args, kwargs = self.parse_replacement_args(*args, **kwargs)
+    def add_replacement(self, keyword: str, replacement: str, *args, **kwargs):
+        args, kwargs = self.parse_replacement_args([], *args, **kwargs)
         self.replace_dict[self.command_name2keyword(keyword)] = replacement.format(*args, **kwargs)
-        return True
-
-    @staticmethod
-    def parse_replacement_args2(match_groups, *user_args, **user_kwargs):
-        new_args = []
-        for arg in user_args:
-            if type(arg) == Args:
-                new_args.append(match_groups[arg.value])
-                new_args += 'ERROR'
-        new_args = tuple(new_args)
-        new_kwargs = {}
-        for kw in user_kwargs:
-            if type(user_kwargs[kw]) == Args:
-                new_kwargs[kw] = match_groups[user_kwargs[kw].value]
-            else:
-                new_kwargs[kw] = 'ERROR'
-        return new_args, new_kwargs
 
     def add_arg_replacement(self, num_args: int, keyword: str, replacement: str, *args, **kwargs):
-        if keyword in self.arg_replace_dict.keys():
-            return False
-        format_args, format_kwargs = self.parse_replacement_args(*args, **kwargs)
-        filtered_args, filtered_kwargs = self.filter_replacement_args(*args, **kwargs)
         self.arg_replace_dict[self.command_name2keyword(keyword)] = {
             'num_args': num_args,
-            'replacement': replacement.format(*format_args, **format_kwargs),
-            'format_args': filtered_args,
-            'format_kwargs': filtered_kwargs
+            'replacement': replacement,
+            'format_args': args,
+            'format_kwargs': kwargs
         }
-        return True
 
     def format(self, contents: str) -> str:
         for key in self.replace_dict.keys():
@@ -106,14 +69,14 @@ class PackageFormatter:
 
     def format_with_arg(self, contents: str) -> str:
         for command in self.arg_replace_dict.keys():
-            search_regex = re.compile(r'{keyword}\({arguments}\)'.format(
+            search_regex = re.compile(r'{keyword}\({arguments}(?<!@)\)'.format(
                 keyword=command,
-                arguments=','.join(['(.*)'] * self.arg_replace_dict[command]['num_args'])
+                arguments=','.join(['(.*?)'] * self.arg_replace_dict[command]['num_args'])
             ))
             match = re.search(search_regex, contents)
             while match is not None:
-                format_args, format_kwargs = self.parse_replacement_args2(
-                    match.groups(),
+                format_args, format_kwargs = self.parse_replacement_args(
+                    list(map(lambda group: group.replace('@)', ')'), match.groups())),
                     *self.arg_replace_dict[command]['format_args'],
                     **self.arg_replace_dict[command]['format_kwargs']
                 )
