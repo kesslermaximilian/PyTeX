@@ -31,16 +31,23 @@ def make_default_commands(package_formatter: PackageFormatter):
                                           prefix=Attributes.package_prefix, condition=Args.one, value=Args.two)
     package_formatter.add_arg_replacement(1, 'if', r'\if{prefix}{condition}', prefix=Attributes.package_prefix,
                                           condition=Args.one)
-    package_formatter.add_replacement('language options',
+    package_formatter.add_replacement('language options x',
                                       r'\newif\if{prefix}english\{prefix}englishtrue' + '\n' +
                                       r'\DeclareOptionX{{german}}{{\{prefix}englishfalse}}' + '\n' +
                                       r'\DeclareOptionX{{ngerman}}{{\{prefix}englishfalse}}' + '\n' +
                                       r'\DeclareOptionX{{english}}{{\{prefix}englishtrue}}',
                                       prefix=Attributes.package_prefix)
+    package_formatter.add_replacement('language options',
+                                      r'\newif\if{prefix}english\{prefix}englishtrue' + '\n' +
+                                      r'\DeclareOption{{german}}{{\{prefix}englishfalse}}' + '\n' +
+                                      r'\DeclareOption{{ngerman}}{{\{prefix}englishfalse}}' + '\n' +
+                                      r'\DeclareOption{{english}}{{\{prefix}englishtrue}}',
+                                      prefix=Attributes.package_prefix)
     package_formatter.add_arg_replacement(1, 'info', r'\PackageInfo{{{name}}}{{{info}}}', name=Attributes.package_name,
                                           info=Args.one)
     package_formatter.add_arg_replacement(1, 'warning', r'\PackageWarning{{{name}}}{{{warning}}}',
                                           name=Attributes.package_name, warning=Args.one)
+    package_formatter.add_arg_replacement(1, 'error', r'\PackageError{{{name}}}{{{error}}}}', name=Attributes.package_name, error=Args.one)
     package_formatter.add_replacement('end options x',
                                       r"\DeclareOptionX*{{\PackageWarning{{{package_name}}}"
                                       r"{{Unknown '\CurrentOption'}}}}" + '\n' + r'\ProcessOptionsX\relax' + '\n',
