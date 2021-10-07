@@ -21,6 +21,7 @@ class PackageFormatter:
         self.year = int(datetime.now().strftime('%Y'))
         self.replace_dict: Dict = {}
         self.arg_replace_dict: Dict = {}
+        self.source_file_name = "not specified"
 
     @staticmethod
     def command_name2keyword(keyword: str):
@@ -88,6 +89,7 @@ class PackageFormatter:
         return contents
 
     def format_package(self, input_path: Path, output_dir: Path = None):
+        self.source_file_name = str(input_path.name)
         input_file = input_path.open()
         lines = input_file.readlines()
         newlines = []

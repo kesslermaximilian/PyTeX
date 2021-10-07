@@ -1,11 +1,12 @@
 from enums import Attributes, Args
 from package_formatter import PackageFormatter
-from config import LICENSE, PACKAGE_INFO_TEXT
+from config import LICENSE, PACKAGE_INFO_TEXT, PYTEX_INFO_TEXT
 
 
 def make_default_commands(package_formatter: PackageFormatter):
-    header = '%' * 80 + '\n' + '\n'.join(map(lambda line: '% ' + line, LICENSE + [''] + PACKAGE_INFO_TEXT)) \
-             + '\n' + '%' * 80 + '\n' \
+    header = '%' * 80 + '\n' \
+             + '\n'.join(map(lambda line: '% ' + line, LICENSE + [''] + PACKAGE_INFO_TEXT + [''] + PYTEX_INFO_TEXT)) \
+             + '\n' + '%' * 80 + '\n\n' \
              + '\\NeedsTeXFormat{{LaTeX2e}}\n' \
                '\\ProvidesPackage{{{package_name}}}[{date} - {description}]\n\n'
     package_formatter.add_arg_replacement(
@@ -15,7 +16,8 @@ def make_default_commands(package_formatter: PackageFormatter):
         date=Attributes.date,
         description=Args.one,
         year=Attributes.year,
-        copyright_holders=Attributes.author
+        copyright_holders=Attributes.author,
+        source_file=Attributes.source_file_name
     )
     package_formatter.add_replacement('package name', '{}', Attributes.package_name)
     package_formatter.add_replacement('package prefix', '{}', Attributes.package_prefix)

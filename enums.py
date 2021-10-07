@@ -10,6 +10,7 @@ class Attributes(Enum):
     file_name = 'file_name'
     date = 'date'
     year = 'year'
+    source_file_name = 'source_file_name'
 
 
 class Args(Enum):
