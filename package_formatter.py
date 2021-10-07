@@ -8,7 +8,8 @@ from enums import Attributes, Args
 
 
 class PackageFormatter:
-    def __init__(self, package_name: str, author: str = DEFAULT_AUTHOR):
+    def __init__(self, package_name: str, author: str = DEFAULT_AUTHOR, extra_header: str = ""):
+        self.extra_header = extra_header
         self.package_name_raw = package_name
         self.author = author
         author_parts = self.author.lower().replace('ß', 'ss').split(' ')
