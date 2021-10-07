@@ -47,6 +47,7 @@ def make_default_commands(package_formatter: PackageFormatter):
                                           info=Args.one)
     package_formatter.add_arg_replacement(1, 'warning', r'\PackageWarning{{{name}}}{{{warning}}}',
                                           name=Attributes.package_name, warning=Args.one)
+    package_formatter.add_arg_replacement(1, 'error', r'\PackageError{{{name}}}{{{error}}}}', name=Attributes.package_name, error=Args.one)
     package_formatter.add_replacement('end options x',
                                       r"\DeclareOptionX*{{\PackageWarning{{{package_name}}}"
                                       r"{{Unknown '\CurrentOption'}}}}" + '\n' + r'\ProcessOptionsX\relax' + '\n',
