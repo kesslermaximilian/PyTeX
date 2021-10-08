@@ -56,7 +56,7 @@ def make_default_commands(formatter: Formatter, latex_file_type: str):
                                   name=Attributes.name_lowercase, error=Args.one, Type=latex_file_type.capitalize())
     formatter.add_replacement('end options x',
                                       r"\DeclareOptionX*{{\{Type}Warning{{{name_lowercase}}}"
-                                      r"{{Unknown '\CurrentOption'}}}}" + '\n' + r'\ProcessOptionsX\relax' + '\n',
+                                      r"{{Unknown '\CurrentOption'}}}}" + '\n' + r'\ProcessOptionsX*\relax' + '\n',
                               name_lowercase=Attributes.name_lowercase, Type=latex_file_type.capitalize())
     formatter.add_replacement('end options',
                                       r"\DeclareOption*{{\{Type}Warning{{{name_lowercase}}}"
