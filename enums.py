@@ -2,11 +2,11 @@ from enum import Enum
 
 
 class Attributes(Enum):
-    package_name_raw = 'package_name_raw'
+    name_raw = 'name_raw'
     author = 'author'
     author_acronym = 'author_acronym'
-    package_name = 'package_name'
-    package_prefix = 'package_prefix'
+    name_lowercase = 'name_lowercase'
+    prefix = 'prefix'
     file_name = 'file_name'
     date = 'date'
     year = 'year'
