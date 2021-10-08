@@ -52,7 +52,7 @@ def make_default_commands(formatter: Formatter, latex_file_type: str):
                                   info=Args.one, Type=latex_file_type.capitalize())
     formatter.add_arg_replacement(1, 'warning', r'\{Type}Warning{{{name}}}{{{warning}}}',
                                   name=Attributes.name_lowercase, warning=Args.one, Type=latex_file_type.capitalize())
-    formatter.add_arg_replacement(1, 'error', r'\{Type}Error{{{name}}}{{{error}}}}',
+    formatter.add_arg_replacement(1, 'error', r'\{Type}Error{{{name}}}{{{error}}}',
                                   name=Attributes.name_lowercase, error=Args.one, Type=latex_file_type.capitalize())
     formatter.add_replacement('end options x',
                                       r"\DeclareOptionX*{{\{Type}Warning{{{name_lowercase}}}"
