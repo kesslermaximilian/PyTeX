@@ -3,11 +3,12 @@ import re
 from pathlib import Path
 from typing import Dict
 from datetime import *
-from enums import Attributes, Args
+
+from PyTeX.base import Attributes, Args
 
 
-class Formatter:
-    def __init__(self, name: str, author: str, extra_header: str, file_extension: str):
+class TexFormatter:
+    def __init__(self, name: str, author: str, extra_header: [str], file_extension: str):
         self.extra_header = extra_header
         self.name_raw = name
         self.author = author
@@ -24,10 +25,10 @@ class Formatter:
         self.source_file_name = "not specified"
 
     @staticmethod
-    def command_name2keyword(keyword: str):
+    def __command_name2keyword(keyword: str):
         return '__' + keyword.upper().strip().replace(' ', '_') + '__'
 
-    def parse_replacement_args(self, match_groups, *user_args, **user_kwargs):
+    def __parse_replacement_args(self, match_groups, *user_args, **user_kwargs):
         new_args = []
         for arg in user_args:
             if type(arg) == Attributes:
@@ -51,24 +52,12 @@ class Formatter:
                 new_kwargs[kw] = 'ERROR'
         return new_args, new_kwargs
 
-    def add_replacement(self, keyword: str, replacement: str, *args, **kwargs):
-        args, kwargs = self.parse_replacement_args([], *args, **kwargs)
-        self.replace_dict[self.command_name2keyword(keyword)] = replacement.format(*args, **kwargs)
-
-    def add_arg_replacement(self, num_args: int, keyword: str, replacement: str, *args, **kwargs):
-        self.arg_replace_dict[self.command_name2keyword(keyword)] = {
-            'num_args': num_args,
-            'replacement': replacement,
-            'format_args': args,
-            'format_kwargs': kwargs
-        }
-
-    def format_string(self, contents: str) -> str:
+    def __format_string(self, contents: str) -> str:
         for key in self.replace_dict.keys():
             contents = contents.replace(key, self.replace_dict[key])
         return contents
 
-    def format_string_with_arg(self, contents: str) -> str:
+    def __format_string_with_arg(self, contents: str) -> str:
         for command in self.arg_replace_dict.keys():
             search_regex = re.compile(r'{keyword}\({arguments}(?<!@)\)'.format(
                 keyword=command,
@@ -76,7 +65,7 @@ class Formatter:
             ))
             match = re.search(search_regex, contents)
             while match is not None:
-                format_args, format_kwargs = self.parse_replacement_args(
+                format_args, format_kwargs = self.__parse_replacement_args(
                     list(map(lambda group: group.replace('@)', ')'), match.groups())),
                     *self.arg_replace_dict[command]['format_args'],
                     **self.arg_replace_dict[command]['format_kwargs']
@@ -88,13 +77,25 @@ class Formatter:
                 match = re.search(search_regex, contents)
         return contents
 
+    def add_replacement(self, keyword: str, replacement: str, *args, **kwargs):
+        args, kwargs = self.__parse_replacement_args([], *args, **kwargs)
+        self.replace_dict[self.__command_name2keyword(keyword)] = replacement.format(*args, **kwargs)
+
+    def add_arg_replacement(self, num_args: int, keyword: str, replacement: str, *args, **kwargs):
+        self.arg_replace_dict[self.__command_name2keyword(keyword)] = {
+            'num_args': num_args,
+            'replacement': replacement,
+            'format_args': args,
+            'format_kwargs': kwargs
+        }
+
     def format_file(self, input_path: Path, output_dir: Path = None):
         self.source_file_name = str(input_path.name)
         input_file = input_path.open()
         lines = input_file.readlines()
         newlines = []
         for line in lines:
-            newlines += self.format_string_with_arg(self.format_string(line))
+            newlines += self.__format_string_with_arg(self.__format_string(line))
         if output_dir is None:
             output_dir = input_path.parent
         output_dir.mkdir(parents=True, exist_ok=True)
