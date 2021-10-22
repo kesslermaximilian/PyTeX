@@ -38,7 +38,7 @@ class TexFileToFormat:
         self.overwrite_existing_files: overwrite_existing_files
         self.build_all = build_all
 
-        self.dirty = is_recent(self.src_path, self.current_build_info.package_repo, compare=None)
+        self.dirty = not is_recent(self.src_path, self.current_build_info.package_repo, compare=None)
         self.pytex_dirty: bool = self.current_build_info.pytex_repo.is_dirty(
             working_tree=True,
             untracked_files=True
@@ -70,7 +70,7 @@ class TexFileToFormat:
         elif not self.pytex_recent or not self.recent:
             return self.__format()  # Build file since either pytex or package repo is not recent
         else:
-            pass  # Do not build
+            return self.last_build_info
 
     def __format(self) -> dict:
         if '.pysty' in self.src_path.name:

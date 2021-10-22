@@ -37,6 +37,6 @@ def is_recent(file: Path, repo: git.Repo, compare: Optional[Union[git.Commit, Li
         return None
 
     if str(file.relative_to(repo.working_dir)) in newly_committed_files:
-        return True
-    else:
         return False
+    else:
+        return True
