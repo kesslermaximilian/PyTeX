@@ -1,5 +1,3 @@
-DEFAULT_AUTHOR = 'Maximilian Keßler'
-
 LICENSE = [
     'Copyright © {year} {copyright_holders}',
     '',
@@ -38,4 +36,11 @@ PYTEX_INFO_TEXT = [
     "It is STRONGLY DISCOURAGED to edit this source file directly, since local",
     "changes will not be versioned by Git and overwritten by the next build. Always",
     "edit the source file and build the {latex_file_type} again."
+]
+
+BUILD_DETAILS = [
+    "Build details:",
+    "  Build time: {build_time}",
+    "  PyTeX version: {pytex_version} (commit {pytex_commit_hash})",
+    "  LatexPackages version: {packages_version} (commit {packages_commit_hash})"
 ]

@@ -1,12 +1,13 @@
 import PyTeX.formatter
 import PyTeX.base
+import PyTeX.config
 
 
 def make_default_macros(formatter: PyTeX.formatter.TexFormatter, latex_file_type: str):
     header = '%' * 80 + '\n' \
              + '\n'.join(map(lambda line: '% ' + line,
-                             PyTeX.base.LICENSE + [''] + PyTeX.base.PACKAGE_INFO_TEXT + [
-                                 ''] + PyTeX.base.PYTEX_INFO_TEXT
+                             PyTeX.config.LICENSE + [''] + PyTeX.config.PACKAGE_INFO_TEXT + [
+                                 ''] + PyTeX.config.PYTEX_INFO_TEXT
                              + [''] + formatter.extra_header)
                          ) \
              + '\n' + '%' * 80 + '\n\n' \

@@ -4,7 +4,7 @@ import PyTeX.macros
 
 
 class PackageFormatter(PyTeX.formatter.TexFormatter):
-    def __init__(self, package_name: str, author: str = PyTeX.base.DEFAULT_AUTHOR, extra_header: [str] = []):
+    def __init__(self, package_name: str, author: str, extra_header: [str] = []):
         PyTeX.formatter.TexFormatter.__init__(self, package_name, author, extra_header, '.sty')
 
     def make_default_macros(self):
