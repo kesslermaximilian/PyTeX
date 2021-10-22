@@ -1,6 +1,8 @@
 from pathlib import Path
 from typing import Optional
 
+import git
+
 import PyTeX
 
 from .build_information import BuildInfo
@@ -55,8 +57,8 @@ def build(
         include_git_version=include_git_version,
         include_pytex_info_text=include_pytex_info_text,
         author=author,
-        pytex_repo=None,  # TODO
-        packages_repo=None  # TODO
+        pytex_repo=git.Repo(__file__, search_parent_directories=True),  # TODO
+        packages_repo=git.Repo(src_dir, search_parent_directories=True)  # TODO
     )
     old_build_info = {}  # TODO: read this in from file
     # extra_header += ['WARNING: Local changes to git repository detected.',
