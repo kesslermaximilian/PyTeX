@@ -4,26 +4,15 @@ import PyTeX.config
 
 
 def make_default_macros(formatter: PyTeX.formatter.TexFormatter, latex_file_type: str):
-    header = '%' * 80 + '\n' \
-             + '\n'.join(map(lambda line: '% ' + line,
-                             PyTeX.config.LICENSE + [''] + PyTeX.config.PACKAGE_INFO_TEXT + [
-                                 ''] + PyTeX.config.PYTEX_INFO_TEXT
-                             + [''] + formatter.extra_header)
-                         ) \
-             + '\n' + '%' * 80 + '\n\n' \
-             + '\\NeedsTeXFormat{{LaTeX2e}}\n' \
-               '\\Provides{Type}{{{name_lowercase}}}[{date} - {description}]\n\n'
+    header = '\\NeedsTeXFormat{{LaTeX2e}}\n' \
+             '\\Provides{Type}{{{name_lowercase}}}[{date} - {description}]\n\n'
     formatter.add_arg_replacement(
         1, 'header',
         header,
         name_lowercase=PyTeX.base.Attributes.name_lowercase,
         date=PyTeX.base.Attributes.date,
         description=PyTeX.base.Args.one,
-        year=PyTeX.base.Attributes.year,
-        copyright_holders=PyTeX.base.Attributes.author,
-        source_file=PyTeX.base.Attributes.source_file_name,
         Type=latex_file_type.capitalize(),
-        latex_file_type=latex_file_type
     )
     formatter.add_replacement('{Type} name'.format(Type=latex_file_type), '{}', PyTeX.base.Attributes.name_lowercase)
     formatter.add_replacement('{Type} prefix'.format(Type=latex_file_type), '{}', PyTeX.base.Attributes.prefix)

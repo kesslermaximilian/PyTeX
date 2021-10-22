@@ -53,7 +53,7 @@ def parse_and_build(arglist: [str]):
         help='Insert git version information into build. This assumes your input'
              'files are located in a git repository. Default: false',
         action='store_true',
-        dest='use_git'
+        dest='include_git_version'
     )
     parser.add_argument(
         '-d', '--allow-dirty',
@@ -91,6 +91,18 @@ def parse_and_build(arglist: [str]):
         help='Overwrite unknown existing files without confirmation',
         action='store_true',
         dest='overwrite_existing_files'
+    )
+    parser.add_argument(
+        '--pytex-info-text',
+        help='Include a PyTeX info text into headers',
+        action='store_true',
+        dest='include_pytex_info_text'
+    )
+    parser.add_argument(
+        '-e', '--extra-header',
+        help='Path to file containing extra text for header of each package',
+        type=pathlib.Path,
+        dest='extra_header'
     )
     args = vars(parser.parse_args(arglist))
     for arg in args.keys():

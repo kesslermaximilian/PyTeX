@@ -1,15 +1,15 @@
 import datetime
 import re
 from pathlib import Path
-from typing import Dict
+from typing import Dict, Optional, List
 from datetime import *
 
 from PyTeX.base import Attributes, Args
 
 
 class TexFormatter:
-    def __init__(self, name: str, author: str, extra_header: [str], file_extension: str):
-        self.extra_header = extra_header
+    def __init__(self, name: str, author: str, header: Optional[List[str]], file_extension: str):
+        self.header = header
         self.name_raw = name
         self.author = author
         author_parts = self.author.lower().replace('ß', 'ss').split(' ')
@@ -27,6 +27,10 @@ class TexFormatter:
     @staticmethod
     def __command_name2keyword(keyword: str):
         return '__' + keyword.upper().strip().replace(' ', '_') + '__'
+
+    @property
+    def filename(self):
+        return self.file_name
 
     def __parse_replacement_args(self, match_groups, *user_args, **user_kwargs):
         new_args = []
@@ -93,7 +97,12 @@ class TexFormatter:
         self.source_file_name = str(input_path.name)
         input_file = input_path.open()
         lines = input_file.readlines()
-        newlines = []
+        if self.header:
+            newlines = '%' * 80 + '\n' \
+                       + '\n'.join(map(lambda line: '% ' + line, self.header)) \
+                       + '\n' + '%' * 80 + '\n\n'
+        else:
+            newlines = []
         for line in lines:
             newlines += self.__format_string_with_arg(self.__format_string(line))
         if output_dir is None:

@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Optional
+from typing import Optional, List
 
 from PyTeX.build.git_hook import is_recent, get_latest_commit
 from PyTeX import PackageFormatter, ClassFormatter
@@ -27,6 +27,8 @@ class TexFileToFormat:
         self.allow_dirty = allow_dirty
         self.overwrite_existing_files: overwrite_existing_files
         self.build_all = build_all
+        self._header: Optional[List[str]] = None
+        self.__format_header()
 
         self.dirty = not is_recent(self.src_path, self.current_build_info.package_repo, compare=None)
         self.pytex_dirty: bool = self.current_build_info.pytex_repo.is_dirty(
@@ -64,19 +66,28 @@ class TexFileToFormat:
         else:
             return self.last_build_info
 
+    def __format_header(self):
+        new_header = []
+        for line in self.current_build_info.header:
+            new_header.append(line.format(
+                source_file=self.src_path.name,
+                latex_file_type='package' if '.pysty' in self.src_path.name else 'class'
+            ))
+        self._header = new_header
+
     def __format(self) -> dict:
         if '.pysty' in self.src_path.name:
             formatter = PackageFormatter(
                 package_name=self.src_path.with_suffix('').name,
                 author=self.current_build_info.author,
-                extra_header=self.current_build_info.header)
+                extra_header=self._header)
         elif '.pycls' in self.src_path.name:
             formatter = ClassFormatter(
                 class_name=self.src_path.with_suffix('').name,
                 author=self.current_build_info.author,
-                extra_header=self.current_build_info.header)
+                extra_header=self._header)
         else:
-            exit(1)
+            raise Exception('Programming error. Please contact the developer.')
         pytex_msg('Writing file {}'.format(formatter.file_name))
         formatter.make_default_macros()
         formatter.format_file(self.src_path, self.build_path)

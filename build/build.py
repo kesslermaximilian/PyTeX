@@ -21,19 +21,27 @@ def build(
         include_license: bool = False,                # header
         include_git_version: bool = False,            # header
         include_pytex_info_text: bool = False,        # header
-        use_git: bool = False,                        # versioning (not implemented yet)
+        extra_header: Optional[Path] = None,
         allow_dirty: bool = False,                    # versioning
         overwrite_existing_files: bool = False,       # output control
         build_all: bool = False,                      # output control / versioning
         write_build_information: bool = True,         # meta
         ):
     pytex_msg('Getting git repository information...')
+    if extra_header:
+        if extra_header.exists():
+            with open(extra_header, 'r') as f:
+                text = f.readlines()
+            extra_header = [line.rstrip() for line in text]
+        else:
+            raise FileNotFoundError('Path to extra header content is invalid.')
     current_build_info = BuildInfo(
         include_timestamp=include_timestamp,
         include_pytex_version=include_pytex_version,
         include_license=include_license,
         include_git_version=include_git_version,
         include_pytex_info_text=include_pytex_info_text,
+        extra_header=extra_header,
         author=author,
         pytex_repo=git.Repo(__file__, search_parent_directories=True),
         packages_repo=git.Repo(src_dir, search_parent_directories=True)

@@ -1,8 +1,9 @@
 import git
 import datetime
-from typing import Optional
+from typing import Optional, List
 
 from PyTeX.build.git_hook import git_describe, get_latest_commit
+from PyTeX.config.header_parts import *
 
 
 class BuildInfo:
@@ -13,6 +14,7 @@ class BuildInfo:
             include_license: bool = False,
             include_git_version: bool = False,
             include_pytex_info_text: bool = False,
+            extra_header: Optional[List[str]] = None,
             author: Optional[str] = None,
             pytex_repo: Optional[git.Repo] = None,
             packages_repo: Optional[git.Repo] = None):
@@ -33,11 +35,12 @@ class BuildInfo:
         self.get_repo_version()
 
         self.create_header(
-            include_timestamp=include_timestamp,
-            include_pytex_version=include_pytex_version,
             include_license=include_license,
+            include_pytex_info_text=include_pytex_info_text,
+            include_timestamp=include_timestamp,
             include_git_version=include_git_version,
-            include_pytex_info_text=include_pytex_info_text
+            include_pytex_version=include_pytex_version,
+            extra_header=extra_header
         )
 
     @property
@@ -86,5 +89,47 @@ class BuildInfo:
             include_pytex_version: bool = False,
             include_license: bool = False,
             include_git_version: bool = False,
-            include_pytex_info_text: bool = False):
-        self._header = []  # TODO
+            include_pytex_info_text: bool = False,
+            extra_header: Optional[List[str]] = None
+    ):
+        if not (include_license
+                or include_pytex_info_text
+                or include_timestamp
+                or include_pytex_version
+                or include_git_version):
+            self._header = None
+            return
+        else:
+            self._header = []
+        if include_license:
+            self._header += LICENSE + ['']
+        if include_pytex_info_text:
+            self._header += PYTEX_INFO_TEXT + ['']
+        if include_timestamp or include_pytex_version or include_git_version:
+            self._header += BUILD_DETAILS
+        if include_timestamp:
+            self._header += BUILD_TIME
+        if include_pytex_version:
+            self._header += PYTEX_VERSION
+        if include_git_version:
+            self._header += SOURCE_CODE_VERSION
+        self._header += ['']
+        if extra_header:
+            self._header += extra_header + ['']
+
+        if self._header[-1] == '':
+            self._header.pop()
+
+        formatted_header = []
+        for line in self._header:
+            formatted_header.append(line.format(
+                year=datetime.datetime.now().strftime('%Y'),
+                copyright_holders=self.author,
+                source_file='{source_file}',
+                latex_file_type='{latex_file_type}',
+                pytex_version=self.pytex_version,
+                pytex_commit_hash=self.pytex_hash[:7],
+                packages_version=self.packages_version,
+                packages_commit_hash=self.packages_hash[:7]
+            ))
+        self._header = formatted_header
