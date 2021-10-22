@@ -103,4 +103,4 @@ class BuildInfo:
             include_license: bool = False,
             include_git_version: bool = False,
             include_pytex_info_text: bool = False):
-        self._header = []
+        self._header = []  # TODO
