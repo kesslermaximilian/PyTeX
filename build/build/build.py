@@ -9,6 +9,7 @@ import PyTeX
 from .build_information import BuildInfo
 
 from PyTeX.build.git_hook.recent import is_recent
+from PyTeX.build.git_hook.git_version import get_latest_commit
 
 BUILD_INFO_FILENAME = 'build_info.json'
 
@@ -38,14 +39,40 @@ class TexFileToFormat:
         self.build_all = build_all
 
         self.dirty = is_recent(self.src_path, self.current_build_info.package_repo, compare=None)
-        self.recent: bool = is_recent(
-            self.src_path,
-            self.current_build_info.package_repo,
-            compare=self.current_build_info.package_repo.commit(self.last_build_info['source commit hash'])
-        ) if self.last_build_info else False
-        pass
+        self.pytex_dirty: bool = self.current_build_info.pytex_repo.is_dirty(
+            working_tree=True,
+            untracked_files=True
+        )
+        if self.last_build_info:
+            self.recent: bool = is_recent(
+                file=self.src_path,
+                repo=self.current_build_info.package_repo,
+                compare=self.current_build_info.package_repo.commit(self.last_build_info['source commit hash'])
+            )
+            self.pytex_recent: bool = get_latest_commit(
+                self.current_build_info.pytex_repo
+            ).hexsha == self.last_build_info['pytex commit hash']
+        else:
+            self.recent = False
+            self.pytex_recent = False
 
     def format(self) -> dict:
+        if self.dirty or self.pytex_dirty:
+            if not self.allow_dirty:
+                raise Exception(
+                    '{file} is dirty, but writing dirty files not allowed.'.format(
+                        file=self.src_path.name if self.dirty else 'Submodule PyTeX')
+                )
+            #  TODO: add this to the header...?
+            return self.__format()  # Dirty files are always built, since we have no information about them
+        elif self.build_all:
+            return self.__format()  # Build file since we build all of them
+        elif not self.pytex_recent or not self.recent:
+            return self.__format()  # Build file since either pytex or package repo is not recent
+        else:
+            pass  # Do not build
+
+    def __format(self) -> dict:
         if '.pysty' in self.src_path.name:
             formatter = PyTeX.PackageFormatter(
                 package_name=self.src_path.with_suffix('').name,
@@ -98,8 +125,8 @@ def build(
         include_git_version=include_git_version,
         include_pytex_info_text=include_pytex_info_text,
         author=author,
-        pytex_repo=git.Repo(__file__, search_parent_directories=True),  # TODO
-        packages_repo=git.Repo(src_dir, search_parent_directories=True)  # TODO
+        pytex_repo=git.Repo(__file__, search_parent_directories=True),
+        packages_repo=git.Repo(src_dir, search_parent_directories=True)
     )
     input_dir = src_dir if src_dir else input_file.parent
     output_dir = build_dir if build_dir else input_file.parent
