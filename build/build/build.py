@@ -8,6 +8,10 @@ import PyTeX
 
 from .build_information import BuildInfo
 
+from PyTeX.build.git_hook.recent import is_recent
+
+BUILD_INFO_FILENAME = 'build_info.json'
+
 
 def pytex_msg(msg: str):
     print('[PyTeX] ' + msg)
@@ -19,27 +23,37 @@ class TexFileToFormat:
             src_path: Path,
             build_dir: Path,
             latex_name: str,
-            build_info: BuildInfo,
+            current_build_info: BuildInfo,
+            last_build_info: Optional[dict],
             allow_dirty: bool = False,
             overwrite_existing_files: bool = False,
             build_all: bool = False):
         self.src_path = src_path
         self.build_path = build_dir
         self.tex_name = latex_name  # Still an identifier on how to name the package when being formatted
-        self.build_info = build_info
+        self.current_build_info = current_build_info
+        self.last_build_info = last_build_info
         self.allow_dirty = allow_dirty
         self.overwrite_existing_files: overwrite_existing_files
         self.build_all = build_all
 
-    def format(self):
+        self.dirty = is_recent(self.src_path, self.current_build_info.package_repo, compare=None)
+        self.recent: bool = is_recent(
+            self.src_path,
+            self.current_build_info.package_repo,
+            compare=self.current_build_info.package_repo.commit(self.last_build_info['source commit hash'])
+        ) if self.last_build_info else False
+        pass
+
+    def format(self) -> dict:
         if '.pysty' in self.src_path.name:
             formatter = PyTeX.PackageFormatter(
                 package_name=self.src_path.with_suffix('').name,
-                extra_header=self.build_info.header)
+                extra_header=self.current_build_info.header)
         elif '.pycls' in self.src_path.name:
             formatter = PyTeX.ClassFormatter(
                 class_name=self.src_path.with_suffix('').name,
-                extra_header=self.build_info.header)
+                extra_header=self.current_build_info.header)
         else:
             exit(1)
         pytex_msg('Writing file {}'.format(formatter.file_name))
@@ -48,12 +62,12 @@ class TexFileToFormat:
         info = {
             'name': formatter.file_name,
             'source file': self.src_path.name,
-            'build time': self.build_info.build_time,
-            'source version': self.build_info.packages_version,
-            'source commit hash': self.build_info.packages_hash,
-            'pytex version': self.build_info.pytex_version,
-            'pytex commit hash': self.build_info.pytex_hash,
-            'dirty': False
+            'build time': self.current_build_info.build_time,
+            'source version': self.current_build_info.packages_version,
+            'source commit hash': self.current_build_info.packages_hash,
+            'pytex version': self.current_build_info.pytex_version,
+            'pytex commit hash': self.current_build_info.pytex_hash,
+            'dirty': self.dirty
         }
         return info
 
@@ -90,10 +104,12 @@ def build(
     input_dir = src_dir if src_dir else input_file.parent
     output_dir = build_dir if build_dir else input_file.parent
 
-    with open(output_dir / 'build_info.json') as f:
-        old_build_info = json.load(f)
-    # extra_header += ['WARNING: Local changes to git repository detected.',
-    #                     '         The build will not be reproducible (!)']
+    last_build_info_file = output_dir / BUILD_INFO_FILENAME
+    if last_build_info_file.exists():
+        with open(output_dir / 'build_info.json', 'r') as f:
+            last_build_info = json.load(f)
+    else:
+        last_build_info = None
 
     files = []
     if input_file:
@@ -112,12 +128,18 @@ def build(
 
     sources_to_build = []
     for file in files:
+        if last_build_info:
+            last_build_info_for_this_file = next(
+                (info for info in last_build_info['tex_sources'] if info['source file'] == file.name), {})
+        else:
+            last_build_info_for_this_file = None
         sources_to_build.append(
             TexFileToFormat(
                 src_path=file,
                 build_dir=output_dir / file.parent.relative_to(input_dir),
                 latex_name=latex_name,
-                build_info=current_build_info,
+                current_build_info=current_build_info,
+                last_build_info=last_build_info_for_this_file,
                 allow_dirty=allow_dirty,
                 overwrite_existing_files=overwrite_existing_files,
                 build_all=build_all
