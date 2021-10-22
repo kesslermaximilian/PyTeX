@@ -76,6 +76,14 @@ class BuildInfo:
     def packages_hash(self):
         return self._packages_repo_commit.hexsha
 
+    @property
+    def package_repo(self):
+        return self._packages_repo
+
+    @property
+    def pytex_repo(self):
+        return self._pytex_repo
+
     def get_repo_commits(self):
         if self._packages_repo:
             self._packages_repo_commit = get_latest_commit(self._packages_repo)

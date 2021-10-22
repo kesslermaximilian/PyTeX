@@ -14,21 +14,34 @@ def pytex_msg(msg: str):
 
 
 class TexFileToFormat:
-    def __init__(self, src_path: Path, build_dir: Path, latex_name: str, build_info: BuildInfo):
+    def __init__(
+            self,
+            src_path: Path,
+            build_dir: Path,
+            latex_name: str,
+            build_info: BuildInfo,
+            allow_dirty: bool = False,
+            overwrite_existing_files: bool = False,
+            build_all: bool = False):
         self.src_path = src_path
         self.build_path = build_dir
         self.tex_name = latex_name  # Still an identifier on how to name the package when being formatted
         self.build_info = build_info
+        self.allow_dirty = allow_dirty
+        self.overwrite_existing_files: overwrite_existing_files
+        self.build_all = build_all
 
     def format(self):
         if '.pysty' in self.src_path.name:
             formatter = PyTeX.PackageFormatter(
                 package_name=self.src_path.with_suffix('').name,
                 extra_header=self.build_info.header)
-        else:
+        elif '.pycls' in self.src_path.name:
             formatter = PyTeX.ClassFormatter(
                 class_name=self.src_path.with_suffix('').name,
                 extra_header=self.build_info.header)
+        else:
+            exit(1)
         pytex_msg('Writing file {}'.format(formatter.file_name))
         formatter.make_default_macros()
         formatter.format_file(self.src_path, self.build_path)
@@ -57,7 +70,7 @@ def build(
         include_license: bool = False,                # header
         include_git_version: bool = False,            # header
         include_pytex_info_text: bool = False,        # header
-        use_git: bool = False,                        # versioning
+        use_git: bool = False,                        # versioning (not implemented yet)
         allow_dirty: bool = False,                    # versioning
         overwrite_existing_files: bool = False,       # output control
         build_all: bool = False,                      # output control / versioning
@@ -104,20 +117,23 @@ def build(
                 src_path=file,
                 build_dir=output_dir / file.parent.relative_to(input_dir),
                 latex_name=latex_name,
-                build_info=current_build_info
+                build_info=current_build_info,
+                allow_dirty=allow_dirty,
+                overwrite_existing_files=overwrite_existing_files,
+                build_all=build_all
             ))
 
     info_dict = {
         'build_time': '',
-        'LatexPackages': {
+        'source files': {
             'version': current_build_info.packages_version,
             'commit': current_build_info.packages_hash,
-            'dirty': False  # TODO
+            'dirty': current_build_info.package_repo.is_dirty(untracked_files=True)
         },
-        'PyTeX': {
+        'pytex': {
             'version': current_build_info.pytex_version,
             'commit': current_build_info.pytex_hash,
-            'dirty': False  # TODO
+            'dirty': current_build_info.pytex_repo.is_dirty(untracked_files=True)
         },
         'tex_sources': [
 
@@ -127,6 +143,8 @@ def build(
     for source in sources_to_build:
         info = source.format()
         info_dict['tex_sources'].append(info)
-    with open(output_dir / 'build_info.json', 'w') as f:
-        json.dump(info_dict, f, indent=4)
+
+    if write_build_information:
+        with open(output_dir / 'build_info.json', 'w') as f:
+            json.dump(info_dict, f, indent=4)
     pytex_msg('Build done')
