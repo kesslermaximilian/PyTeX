@@ -69,6 +69,8 @@ class TexFileToFormat:
             return self.__format()  # Build file since we build all of them
         elif not self.pytex_recent or not self.recent:
             return self.__format()  # Build file since either pytex or package repo is not recent
+        elif self.last_build_info and self.last_build_info['dirty']:
+            return self.__format()  # Build file since we do not know in what state it is
         else:
             return self.last_build_info
 
