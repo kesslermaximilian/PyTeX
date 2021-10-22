@@ -32,7 +32,9 @@ class BuildInfo:
             author: Optional[str] = None,
             pytex_repo: Optional[git.Repo] = None,
             packages_repo: Optional[git.Repo] = None):
+
         self.author = author
+        self.build_time = datetime.datetime.now().strftime('%Y/%m/%d %H:%M')
 
         self._pytex_repo = pytex_repo
         self._packages_repo = packages_repo
@@ -54,6 +56,26 @@ class BuildInfo:
             include_pytex_info_text=include_pytex_info_text
         )
 
+    @property
+    def header(self):
+        return self._header
+
+    @property
+    def pytex_version(self):
+        return self._pytex_repo_version
+
+    @property
+    def packages_version(self):
+        return self._packages_repo_version
+
+    @property
+    def pytex_hash(self):
+        return self._pytex_repo_commit.hexsha
+
+    @property
+    def packages_hash(self):
+        return self._packages_repo_commit.hexsha
+
     def get_repo_commits(self):
         if self._packages_repo:
             self._packages_repo_commit = get_latest_commit(self._packages_repo)
@@ -73,4 +95,4 @@ class BuildInfo:
             include_license: bool = False,
             include_git_version: bool = False,
             include_pytex_info_text: bool = False):
-        pass
+        self._header = []

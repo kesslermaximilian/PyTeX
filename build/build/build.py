@@ -1,3 +1,4 @@
+import json
 from pathlib import Path
 from typing import Optional
 
@@ -13,22 +14,35 @@ def pytex_msg(msg: str):
 
 
 class TexFileToFormat:
-    def __init__(self, src_path: Path, build_dir: Path):
+    def __init__(self, src_path: Path, build_dir: Path, latex_name: str, build_info: BuildInfo):
         self.src_path = src_path
         self.build_path = build_dir
+        self.tex_name = latex_name  # Still an identifier on how to name the package when being formatted
+        self.build_info = build_info
 
     def format(self):
         if '.pysty' in self.src_path.name:
             formatter = PyTeX.PackageFormatter(
                 package_name=self.src_path.with_suffix('').name,
-                extra_header=[])  # TODO: extra header
+                extra_header=self.build_info.header)
         else:
             formatter = PyTeX.ClassFormatter(
                 class_name=self.src_path.with_suffix('').name,
-                extra_header=[])  # TODO
+                extra_header=self.build_info.header)
         pytex_msg('Writing file {}'.format(formatter.file_name))
         formatter.make_default_macros()
         formatter.format_file(self.src_path, self.build_path)
+        info = {
+            'name': formatter.file_name,
+            'source file': self.src_path.name,
+            'build time': self.build_info.build_time,
+            'source version': self.build_info.packages_version,
+            'source commit hash': self.build_info.packages_hash,
+            'pytex version': self.build_info.pytex_version,
+            'pytex commit hash': self.build_info.pytex_hash,
+            'dirty': False
+        }
+        return info
 
 
 def build(
@@ -60,7 +74,11 @@ def build(
         pytex_repo=git.Repo(__file__, search_parent_directories=True),  # TODO
         packages_repo=git.Repo(src_dir, search_parent_directories=True)  # TODO
     )
-    old_build_info = {}  # TODO: read this in from file
+    input_dir = src_dir if src_dir else input_file.parent
+    output_dir = build_dir if build_dir else input_file.parent
+
+    with open(output_dir / 'build_info.json') as f:
+        old_build_info = json.load(f)
     # extra_header += ['WARNING: Local changes to git repository detected.',
     #                     '         The build will not be reproducible (!)']
 
@@ -79,40 +97,36 @@ def build(
             for file in src_dir.glob('*.pycls'):
                 files.append(file)
 
-    input_dir = src_dir if src_dir else input_file.parent
-    output_dir = build_dir if build_dir else input_file.parent
     sources_to_build = []
     for file in files:
         sources_to_build.append(
             TexFileToFormat(
                 src_path=file,
-                build_dir=output_dir / file.parent.relative_to(input_dir)
+                build_dir=output_dir / file.parent.relative_to(input_dir),
+                latex_name=latex_name,
+                build_info=current_build_info
             ))
 
-    for source in sources_to_build:
-        source.format()
-
-    current_build_info = {
+    info_dict = {
         'build_time': '',
-        'packages': {
-            'built': '',
-            'skipped': ''
-        },
-        'classes': {
-          'built': '',
-          'skipped': ''
-        },
         'LatexPackages': {
-            'version': '',
-            'branch': '',
-            'commit': '',
-            'dirty': ''
+            'version': current_build_info.packages_version,
+            'commit': current_build_info.packages_hash,
+            'dirty': False  # TODO
         },
         'PyTeX': {
-            'version': '',
-            'branch': '',
-            'commit': '',
-            'dirty': ''
-        }
+            'version': current_build_info.pytex_version,
+            'commit': current_build_info.pytex_hash,
+            'dirty': False  # TODO
+        },
+        'tex_sources': [
+
+        ]
     }
+
+    for source in sources_to_build:
+        info = source.format()
+        info_dict['tex_sources'].append(info)
+    with open(output_dir / 'build_info.json', 'w') as f:
+        json.dump(info_dict, f, indent=4)
     pytex_msg('Build done')
